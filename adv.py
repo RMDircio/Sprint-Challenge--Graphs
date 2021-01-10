@@ -20,9 +20,6 @@ map_file = "maps/main_maze.txt"
 room_graph=literal_eval(open(map_file, "r").read())
 world.load_graph(room_graph)
 
-# Print an ASCII map
-# world.print_rooms()
-
 player = Player(world.starting_room)
 
 # search the graph
@@ -45,9 +42,10 @@ def breadth_first_search():
     for door in player.current_room.get_exits():
         visited_rooms[player.current_room.id][door] = '?'
 
+    continue_loop = True
 
     # while the ? tracker is NOT empty
-    while len(questionable_rooms) > 0:
+    while continue_loop:
         # dequeue the current PATH from the front of the queue
         current_path = queue.pop(0) # creates a single list
 
@@ -55,11 +53,12 @@ def breadth_first_search():
         # use the room at the END of the PATH array
         # this is a way to look at the last place we have been
         current_room = current_path[-1]
+        # set the player to the last room in the PATH
+        player.current_room = current_room
 
         # get the room numbers for each exit - go through rooms
         # getting only keys from inner dictonary
         for cardinal_direction in list(visited_rooms[current_room.id].keys()):
-            print(f"{cardinal_direction} is type {type(cardinal_direction)}")
             # try a room
             player.travel(cardinal_direction)
             # get room id
@@ -104,12 +103,15 @@ def breadth_first_search():
             current_path_copy.append(next_room)
             # add the whole PATH to the queue
             queue.append(current_path_copy)
+
+            if len(set(room.id for room in current_path_copy)) >= len(room_graph):
+                continue_loop = False
+                current_path = current_path_copy
+                break
         
             # go back to pervious room
             player.current_room = current_room
 
-        
-        
     # invert only inner dictonary key <-- values
     for key in visited_rooms.keys(): # keys of outer dictonary = room ids
         visited_rooms[key] = {v: k for k, v in visited_rooms[key].items()} 
@@ -130,9 +132,10 @@ def breadth_first_search():
 # Fill this out with directions to walk
 # traversal_path = ['n', 'n']
 traversal_path = breadth_first_search()
+
+# Print an ASCII map
+world.print_rooms()
 print(traversal_path)
-
-
 
 # TRAVERSAL TEST - DO NOT MODIFY
 visited_rooms = set()
